@@ -23,9 +23,9 @@ def train_model(X_train, y_train):
     model
         Trained machine learning model.
     """
-   model = RandomForestClassifier()
-   model.fit(X_train, y_train)
-   return model
+    model = RandomForestClassifier()
+    model.fit(X_train, y_train)
+    return model
 
 
 def compute_model_metrics(y, preds):
@@ -135,7 +135,7 @@ def performance_on_categorical_slice(
         column_name=column_name,
         slice_value=slice_value
     )
-    
+
     preds = model.predict(X_slice)
     precision, recall, fbeta = compute_model_metrics(y_slice, preds)
     return precision, recall, fbeta
