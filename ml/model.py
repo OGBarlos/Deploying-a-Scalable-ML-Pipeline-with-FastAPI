@@ -81,10 +81,14 @@ def save_model(model, path):
 
 def load_model(path):
     """ Loads pickle file from `path` and returns it."""
-    logging.info(f"Loading model from: {path + '/model.joblib'}")
-    model = joblib.load(path + '/model.joblib')
-    encoder = joblib.load(path + '/encoder.joblib')
-    lb = joblib.load(path + 'lb.joblib')
+    model_path = os.path.join(path, "model.pkl")
+    encoder_path = os.path.join(path, "encoder.pkl")
+    lb_path = os.path.join(path, "lb.pkl")
+
+    logging.info(f"Loading model from: {model_path}")
+    model = joblib.load(model_path)
+    encoder = joblib.load(encoder_path)
+    lb = joblib.load(lb_path)
     return model, encoder, lb
 
 
