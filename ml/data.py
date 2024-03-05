@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
 
-
 def process_data(
     X, categorical_features=[], label=None, training=True, encoder=None, lb=None
 ):
@@ -43,36 +42,34 @@ def process_data(
         Trained LabelBinarizer if training is True, otherwise returns the binarizer
         passed in.
     """
-    if training:
-        # One hot encode categorical features
-        if categorical_features:
-            encoder = OneHotEncoder(sparse=False)
-            X_encoded = encoder.fit_transform(X[categorical_features])
-        else:
-            X_encoded = np.array([])
 
-        # Binarize labels
-        if label is not None:
-            lb = LabelBinarizer()
-            y = lb.fit_transform(X[label])
-        else:
-            y = np.array([])
-
-        return X_encoded, y, encoder, lb
+    if label is not None:
+        y = X[label]
+        X = X.drop([label], axis=1)
     else:
-        # One hot encode categorical features
-        if categorical_features and encoder is not None:
-            X_encoded = encoder.transform(X[categorical_features])
-        else:
-            X_encoded = np.array([])
+        y = np.array([])
+        
+    print("Columns received by process_data function:", X.columns)
 
-        # Binarize labels
-        if label is not None and lb is not None:
-            y = lb.transform(X[label])
-        else:
-            y = np.array([])
+    X_categorical = X[categorical_features].values
+    X_continuous = X.drop(*[categorical_features], axis=1)
 
-        return X_encoded, y, encoder, lb
+    if training is True:
+        encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
+        lb = LabelBinarizer()
+        X_categorical = encoder.fit_transform(X_categorical)
+        y = lb.fit_transform(y.values).ravel()
+    else:
+        X_categorical = encoder.transform(X_categorical)
+        try:
+            y = lb.transform(y.values).ravel()
+        # Catch the case where y is None because we're doing inference.
+        except AttributeError:
+            pass
+
+    X = np.concatenate([X_continuous, X_categorical], axis=1)
+    return X, y, encoder, lb
+
 
 def apply_label(inference):
     """ Convert the binary label in a single inference sample into string output."""
@@ -80,4 +77,3 @@ def apply_label(inference):
         return ">50K"
     elif inference[0] == 0:
         return "<=50K"
-

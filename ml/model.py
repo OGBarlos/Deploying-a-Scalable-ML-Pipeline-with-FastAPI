@@ -1,15 +1,9 @@
 import pickle
-import numpy as np
-import pandas as pd
-import logging
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import fbeta_score, precision_score, recall_score
 from ml.data import process_data
+# TODO: add necessary import
+from sklearn.preprocessing import OneHotEncoder, LabelBinarizer
 from sklearn.ensemble import RandomForestClassifier
-import joblib
-from joblib import dump
-import os
-
-import multiprocessing
 
 # Optional: implement hyperparameter tuning.
 def train_model(X_train, y_train):
@@ -27,11 +21,9 @@ def train_model(X_train, y_train):
     model
         Trained machine learning model.
     """
-    model = RandomForestClassifier()
-    
-    # Train the model on the training data
+   # TODO: implement the function
+    model = RandomForestClassifier()  # You can replace this with any model of your choice
     model.fit(X_train, y_train)
-    
     return model
 
 
@@ -51,10 +43,9 @@ def compute_model_metrics(y, preds):
     recall : float
     fbeta : float
     """
-    precision = precision_score(y, preds)
-    recall = recall_score(y, preds)
-    fbeta = f1_score(y, preds)
-    
+    fbeta = fbeta_score(y, preds, beta=1, zero_division=1)
+    precision = precision_score(y, preds, zero_division=1)
+    recall = recall_score(y, preds, zero_division=1)
     return precision, recall, fbeta
 
 
@@ -72,8 +63,8 @@ def inference(model, X):
     preds : np.array
         Predictions from the model.
     """
+    # TODO: implement the function
     preds = model.predict(X)
-    
     return preds
 
 def save_model(model, path):
@@ -86,31 +77,17 @@ def save_model(model, path):
     path : str
         Path to save pickle file.
     """
-    joblib.dump(model, path)
+    # TODO: implement the function
+    with open(path, 'wb') as file:
+        pickle.dump(model, file)
 
 def load_model(path):
-    """
-    Loads model and related objects from the given path.
+    """ Loads pickle file from `path` and returns it."""
+    # TODO: implement the function
+    with open(path, 'rb') as file:
+        model = pickle.load(file)
+    return model
 
-    Inputs
-    ------
-    path : str
-        Path where model and related objects are saved.
-    Returns
-    -------
-    model : object
-        Trained machine learning model.
-    encoder : object
-        Trained OneHotEncoder.
-    lb : object
-        Trained LabelBinarizer.
-    """
-    logging.info(f"Loading model from: {path}")
-    model = joblib.load(os.path.join(path, "model.joblib"))
-    encoder = joblib.load(os.path.join(path, "encoder.joblib"))
-    lb = joblib.load(os.path.join(path, "lb.joblib"))
-    return model, encoder, lb
-    
 
 def performance_on_categorical_slice(
     data, column_name, slice_value, categorical_features, label, encoder, lb, model
@@ -149,33 +126,8 @@ def performance_on_categorical_slice(
 
     """
     # TODO: implement the function
-    sliced_data = data[data[column_name] == slice_value].copy()
+    X_slice, y_slice, _, _ = process_data(data[column_name], categorical_features, label, training=False, encoder=encoder, lb=lb)
 
-    # Extract features and labels
-    X_slice = sliced_data.drop(columns=[label])
-    y_slice = sliced_data[label] if label else None
-
-    # One hot encode categorical features
-    if categorical_features and encoder is not None:
-        X_encoded = encoder.transform(X_slice[categorical_features])
-    else:
-        X_encoded = np.array([])
-
-    # Binarize labels
-    if label is not None and lb is not None:
-        y_binarized = lb.transform(y_slice)
-    else:
-        y_binarized = np.array([])
-
-    # Make predictions
-    if model is not None:
-        preds = model.predict(X_encoded)
-    else:
-        raise ValueError("Model is not provided.")
-
-    # Compute precision, recall, and F1 scores
-    precision = precision_score(y_binarized, preds)
-    recall = recall_score(y_binarized, preds)
-    fbeta = f1_score(y_binarized, preds)
-    
+    preds = inference(model, X_slice)
+    precision, recall, fbeta = compute_model_metrics(y_slice, preds)
     return precision, recall, fbeta
