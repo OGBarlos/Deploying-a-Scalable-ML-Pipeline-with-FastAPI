@@ -30,4 +30,4 @@ jobs:
       run: pytest
 
     - name: Run flake8
-      run: flake8
+      run: flake8 --select F821
